@@ -17,7 +17,7 @@ identified foods, their positions, names, and corresponding nutritional details.
 `;
 const image = {
   inlineData: {
-    data: Buffer.from(fs.readFileSync("all.jpg")).toString("base64"),
+    data: Buffer.from(fs.readFileSync("cookie.jpg")).toString("base64"),
     mimeType: "image/jpg",
   },
 };
