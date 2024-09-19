@@ -31,6 +31,7 @@ const docs = await loader.load();
 
 //create and upsert vectors
 
+const chunks = [];
 for (const doc of docs) {
   console.log(`Processing document: ${doc.metadata.source}`);
   const txtPath = doc.metadata.source;
@@ -39,11 +40,11 @@ for (const doc of docs) {
   const textSplitter = new RecursiveCharacterTextSplitter({
     chunkSize: 1000,
     chunkOverlap: 100,
-    lengthFunction: (text) => text.length,
   });
   console.log("Splitting text into chunks...");
 
-  const chunks = await textSplitter.createDocuments([text]);
+  const newDoc = await textSplitter.createDocuments([text]);
+  chunks.push(...newDoc);
   console.log(`Text split into ${chunks.length} chunks`);
 
   console.log(
@@ -88,12 +89,12 @@ for (const doc of docs) {
 }
 
 const question =
-  "Qual o número do processo que trata de Violação de normas ambientais pela Empresa de Construção?";
+  "Responda apenas com base no input fornecido. Quais foram os envolvidos no caso de disputa de terras?";
 
 const queryEmbedding = await new OpenAIEmbeddings().embedQuery(question);
 // 6. Query Pinecone index and return top 10 matches
 let queryResponse = await index.namespace("ns1").query({
-  topK: 10,
+  topK: 3,
   vector: queryEmbedding,
   includeMetadata: true,
   includeValues: true,
@@ -111,7 +112,6 @@ if (queryResponse.matches.length) {
     .map((match) => match.metadata.pageContent)
     .join(" ");
 
-  console.log(concatenatedPageContent);
   // 11. Execute the chain with input documents and question
   const result = await chain.invoke({
     input_documents: [new Document({ pageContent: concatenatedPageContent })],
